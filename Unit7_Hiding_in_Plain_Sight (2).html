@@ -1,0 +1,1266 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Hiding in Plain Sight: What AI Is and Where It Already Works</title>
+<style>
+:root{
+  --navy:#003366; --gold:#F2A900; --light:#F2F6FA; --ink:#1a1a1a; --muted:#4a5a6a;
+  --rule:#C9D3DE; --ok:#2E7D32; --bad:#B3261E; --desk:#00264D;
+}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{margin:0;font-family:Arial,Helvetica,sans-serif;color:var(--ink);background:var(--desk);
+  background-image:radial-gradient(ellipse at 50% 35%,#0b3d70 0%,var(--desk) 72%);
+  display:flex;flex-direction:column;min-height:100vh}
+button{font-family:inherit}
+.topbar{display:flex;align-items:center;gap:14px;padding:10px 20px;color:#fff}
+.topbar .title{font-weight:bold;font-size:15px}
+.topbar .count{margin-left:auto;font-size:14px}
+.topbar .tocbtn{background:transparent;color:#fff;border:2px solid rgba(255,255,255,.55);border-radius:6px;padding:6px 12px;font-size:14px;font-weight:bold;cursor:pointer}
+.progress{height:4px;background:rgba(255,255,255,.15)}
+.progress span{display:block;height:100%;width:0;background:var(--gold);transition:width .3s}
+.stage{flex:1;display:flex;align-items:center;justify-content:center;gap:14px;padding:12px 12px 18px}
+.navbtn{width:50px;height:50px;border-radius:50%;border:2px solid rgba(255,255,255,.55);background:transparent;color:#fff;font-size:28px;line-height:1;cursor:pointer;flex:none}
+.navbtn:hover{background:rgba(255,255,255,.12)}
+.navbtn:disabled{opacity:.25;cursor:default}
+.book{position:relative;width:min(1060px,calc(100vw - 150px));height:min(720px,calc(100vh - 118px));
+  perspective:2400px;background:#fff;border-radius:3px 8px 8px 3px;
+  box-shadow:4px 0 0 #e8edf3,8px 0 0 #dce3eb,12px 0 0 #d0d9e3,0 26px 50px rgba(0,0,0,.45)}
+.page{position:absolute;inset:0;overflow-y:auto;display:none;padding:22px 56px 40px 74px;border-radius:3px 8px 8px 3px;
+  background:#fff linear-gradient(90deg,rgba(0,0,0,.13),rgba(0,0,0,0)) no-repeat;background-size:40px 100%}
+.page.current{display:block}
+.turner{position:absolute;inset:0;transform-origin:left center;z-index:5;backface-visibility:hidden;-webkit-backface-visibility:hidden;pointer-events:none}
+.turner .shade{position:absolute;inset:0;background:linear-gradient(90deg,rgba(0,0,0,.05),rgba(0,0,0,.35));opacity:0;border-radius:3px 8px 8px 3px}
+.runhead{display:flex;justify-content:space-between;font-size:13px;color:var(--muted);border-bottom:1px solid var(--rule);padding-bottom:8px;margin-bottom:18px}
+h2{font-size:28px;color:var(--navy);margin:0 0 10px;line-height:1.2}
+h3{font-size:18px;color:var(--navy);margin:16px 0 8px}
+p{font-size:16.5px;line-height:1.6;margin:0 0 12px;max-width:74ch}
+.lead{font-size:18.5px}
+.small{font-size:13.5px;color:var(--muted);line-height:1.5}
+.cols{display:grid;grid-template-columns:1fr 1fr;gap:28px;align-items:start}
+.cols3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:18px;align-items:start}
+.callout{border-left:4px solid var(--gold);background:var(--light);padding:12px 16px;margin:14px 0;border-radius:0 6px 6px 0}
+.callout p:last-child{margin-bottom:0}
+blockquote{margin:12px 0;padding:14px 18px;border-left:4px solid var(--gold);background:var(--light);font-size:20px;line-height:1.45;color:var(--navy);font-weight:bold}
+blockquote cite{display:block;margin-top:8px;font-size:14px;font-weight:normal;font-style:normal;color:var(--muted)}
+.btn{font-weight:bold;font-size:15px;background:var(--navy);color:#fff;border:2px solid var(--navy);padding:9px 16px;border-radius:6px;cursor:pointer}
+.btn.alt{background:#fff;color:var(--navy)}
+.btn:disabled{opacity:.4;cursor:default}
+button:focus-visible,[tabindex]:focus-visible,input:focus-visible,textarea:focus-visible,select:focus-visible,a:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
+.row{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin:10px 0}
+textarea{width:100%;min-height:120px;font:inherit;font-size:17px;line-height:1.5;padding:12px;border:2px solid var(--rule);border-radius:6px;resize:vertical}
+input[type=text]{font:inherit;font-size:16px;padding:8px 10px;border:2px solid var(--rule);border-radius:6px}
+select{font:inherit;font-size:15px;padding:6px 8px;border:2px solid var(--rule);border-radius:6px;background:#fff}
+.status{font-weight:bold;color:var(--navy)}
+table.data{border-collapse:collapse;font-size:15px;margin:8px 0}
+table.data th,table.data td{border:1px solid var(--rule);padding:6px 10px;text-align:center}
+table.data th{background:var(--navy);color:#fff;font-weight:bold}
+table.data td.name{text-align:left;font-weight:bold;color:var(--navy);background:var(--light)}
+.yes{color:var(--ok);font-weight:bold}.no{color:var(--bad);font-weight:bold}
+.tag{display:inline-block;font-size:12.5px;font-weight:bold;color:var(--navy);background:var(--light);border:1px solid var(--rule);border-radius:4px;padding:2px 8px;margin-bottom:8px}
+
+/* cover */
+.page.cover{background:var(--navy);color:#fff;padding:48px 64px 40px 80px}
+.cover h1{font-size:50px;line-height:1.05;margin:26px 0 14px;color:#fff;max-width:14ch}
+.cover .sub{font-size:21px;line-height:1.4;max-width:34ch;margin:0 0 26px;color:#fff}
+.cover .meta{font-size:15px;line-height:1.7;color:#dfe8f2;border-top:3px solid var(--gold);padding-top:14px;max-width:44ch}
+.cover .howto{font-size:14.5px;color:#dfe8f2;margin-top:22px;max-width:52ch}
+.cover .btn{background:var(--gold);border-color:var(--gold);color:var(--navy);margin-top:18px}
+.cover svg{position:absolute;right:56px;top:60px;width:min(360px,34%);height:auto}
+
+/* flip cards */
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:14px;margin:12px 0}
+.fc{perspective:1000px;cursor:pointer;border-radius:10px}
+.fc-in{display:grid;transition:transform .6s;transform-style:preserve-3d;height:100%}
+.fc.flipped .fc-in{transform:rotateY(180deg)}
+.face{grid-area:1/1;backface-visibility:hidden;-webkit-backface-visibility:hidden;border-radius:10px;padding:16px;min-height:150px}
+.front{background:var(--navy);color:#fff;border-bottom:5px solid var(--gold);display:flex;flex-direction:column;justify-content:space-between;gap:10px}
+.front .big{font-size:19px;font-weight:bold;line-height:1.3}
+.front .what{font-size:14.5px;line-height:1.45;color:#e3ebf3}
+.front .hint{font-size:13px;color:#c7d6e6}
+.back{background:#fff;border:2px solid var(--navy);transform:rotateY(180deg);font-size:14.5px;line-height:1.5}
+.back .kind{font-weight:bold;color:var(--navy);margin-bottom:6px}
+.back .src{font-size:12.5px;color:var(--muted);margin-top:8px}
+
+/* choices */
+.choice{border:1px solid var(--rule);border-radius:8px;padding:12px 14px;margin:10px 0}
+.choice .q{margin:0 0 8px;font-weight:bold;font-size:16px}
+.opts button{font-size:14.5px;padding:7px 14px;border-radius:20px;border:2px solid var(--navy);background:#fff;color:var(--navy);cursor:pointer;margin:0 6px 6px 0}
+.opts button.picked{background:var(--navy);color:#fff}
+.opts button.right{border-color:var(--ok);background:#E8F5E9;color:#1B5E20}
+.opts button.picked.wrong{border-color:var(--bad);background:#FDECEA;color:#8C1D18}
+.reveal{background:var(--light);border-left:4px solid var(--gold);padding:10px 12px;margin-top:8px;font-size:15px;line-height:1.55}
+.verdict{font-weight:bold;margin-right:4px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:0 16px}
+
+/* bars */
+.barrow{display:grid;grid-template-columns:150px 1fr 56px;gap:10px;align-items:center;margin:6px 0;font-size:15px}
+.track{background:#E3E9F0;border-radius:3px;height:22px;overflow:hidden}
+.bar{height:100%;width:0;background:var(--navy);transition:width .45s}
+.bar.top{background:var(--gold)}
+
+/* misc components */
+.stopgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-top:14px}
+.stop{text-align:left;background:var(--light);border:2px solid var(--rule);border-left:5px solid var(--navy);border-radius:6px;padding:12px;cursor:pointer;color:var(--ink)}
+.stop b{display:block;color:var(--navy);font-size:16px;margin-bottom:4px}
+.stop span{font-size:13.5px;color:var(--muted);line-height:1.4}
+.stop:hover{border-left-color:var(--gold)}
+.flow{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin:12px 0}
+.box{border:2px solid var(--navy);border-radius:6px;padding:10px 12px;font-weight:bold;color:var(--navy);background:#fff;font-size:15px}
+.box.key{background:var(--navy);color:#fff}
+.box.made{border-color:var(--gold);border-width:3px}
+.arrow{font-size:22px;color:var(--navy)}
+.seg{display:inline-flex;border:2px solid var(--navy);border-radius:6px;overflow:hidden}
+.seg button{border:0;background:#fff;color:var(--navy);font-weight:bold;font-size:14.5px;padding:8px 14px;cursor:pointer}
+.seg button[aria-pressed=true]{background:var(--navy);color:#fff}
+.pix{display:grid;grid-template-columns:repeat(10,1fr);width:min(330px,100%);border:2px solid var(--navy)}
+.pix div{aspect-ratio:1;display:flex;align-items:center;justify-content:center;font-size:10.5px;font-weight:bold;color:transparent;transition:color .3s}
+.pix.nums div{color:#d4dde7}
+.pix.nums div.dark{color:#fff}
+.pix.nums div.light{color:#6b7c8d}
+.spa{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:10px 0}
+.spa div{border:2px solid var(--rule);border-radius:8px;padding:12px;text-align:center;font-weight:bold;color:var(--navy);transition:all .3s}
+.spa div.on{border-color:var(--gold);background:var(--navy);color:#fff}
+.blank{width:140px;text-align:center}
+.blank.ok{border-color:var(--ok);background:#E8F5E9}
+.blank.bad{border-color:var(--bad);background:#FDECEA}
+.bank{display:flex;flex-wrap:wrap;gap:8px;margin:10px 0 14px}
+.bank span{border:2px dashed var(--navy);border-radius:4px;padding:4px 10px;font-weight:bold;color:var(--navy);font-size:15px}
+.fib p{margin:0 0 10px}
+.eight{counter-reset:e;list-style:none;padding:0;margin:12px 0;display:grid;grid-template-columns:1fr 1fr;gap:8px 20px}
+.eight li button{width:100%;text-align:left;background:#fff;border:0;border-bottom:1px solid var(--rule);padding:8px 4px;font-size:16px;cursor:pointer;color:var(--ink)}
+.eight li button b{color:var(--navy)}
+.eight li button span{display:block;font-size:13px;color:var(--muted)}
+.pipe{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:12px 0 0}
+.pipe button{background:#fff;border:2px solid var(--navy);border-radius:6px;padding:10px;font-weight:bold;font-size:15.5px;color:var(--navy);cursor:pointer;text-align:left}
+.pipe button small{display:block;font-weight:normal;font-size:13px;color:var(--muted);margin-top:3px}
+.pipe button[aria-pressed=true]{background:var(--navy);color:#fff;border-bottom:5px solid var(--gold)}
+.pipe button[aria-pressed=true] small{color:#dbe6f1}
+.detail{border:2px solid var(--navy);border-top:0;border-radius:0 0 8px 8px;padding:14px 16px;min-height:96px;font-size:16px;line-height:1.55}
+.msg{background:var(--light);border:2px solid var(--rule);border-radius:14px 14px 14px 2px;padding:12px 16px;font-size:18px;line-height:1.6;max-width:62ch}
+.ent{border-radius:3px;padding:1px 3px;transition:background .3s}
+.show .e-payee{background:#FFE7A6}.show .e-amt{background:#CFE3F7}.show .e-from{background:#D8EFD9}.show .e-memo{background:#F3D9E7}
+.legend span{display:inline-block;font-size:13px;padding:2px 8px;border-radius:3px;margin:0 6px 6px 0}
+.confirm{border:2px solid var(--navy);border-radius:10px;padding:14px;max-width:320px;background:#fff}
+.confirm .l{font-size:13px;color:var(--muted)}
+.confirm .v{font-weight:bold;font-size:16px;margin-bottom:8px}
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin:8px 0}
+.chips button{background:var(--light);border:1px solid var(--rule);border-radius:16px;padding:6px 12px;font-size:14px;cursor:pointer;color:var(--navy)}
+.col h3{margin-top:0;padding-bottom:6px;border-bottom:3px solid var(--gold)}
+.col ul{padding-left:18px;margin:0}
+.col li{font-size:15px;line-height:1.5;margin-bottom:9px}
+.matchrow{display:grid;grid-template-columns:1fr 250px 30px;gap:10px;align-items:center;padding:8px 0;border-bottom:1px solid var(--rule)}
+.matchrow b{color:var(--navy)}
+.matchrow .mk{font-weight:bold;font-size:18px}
+.defbox{background:var(--light);border:2px solid var(--rule);border-radius:6px;padding:12px;min-height:120px;font-size:17px;line-height:1.5;white-space:pre-wrap}
+.steps{padding-left:22px;margin:10px 0}
+.steps li{font-size:16px;line-height:1.55;margin-bottom:8px}
+.srcs p{font-size:14px;line-height:1.5;padding-left:28px;text-indent:-28px;margin:0 0 8px;max-width:none;overflow-wrap:anywhere}
+.srcs a{color:var(--navy)}
+
+.chain{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin:12px 0 0}
+.chain button{border:2px solid var(--navy);background:var(--navy);color:#fff;border-radius:6px;padding:10px 12px;font-weight:bold;font-size:15px;cursor:pointer;min-width:120px;text-align:left}
+.chain button small{display:block;font-weight:normal;font-size:12.5px;color:#dbe6f1;margin-top:2px}
+.chain button[aria-pressed=false]{background:#fff;color:#8a96a3;border-style:dashed;text-decoration:line-through}
+.chain button[aria-pressed=false] small{color:#8a96a3}
+.chain .link{color:var(--navy);font-weight:bold;font-size:18px}
+.print-only,.print-text{display:none}
+#printSummary{font-family:Arial,Helvetica,sans-serif;color:#1a1a1a}
+#printSummary h1{font-size:24px;color:#003366;margin:0 0 4px}
+#printSummary .meta{font-size:14px;margin:0 0 3px}
+#printSummary h2{font-size:17px;color:#003366;margin:16px 0 6px;border-bottom:2px solid #F2A900;padding-bottom:3px}
+#printSummary h3{font-size:14px;color:#003366;margin:12px 0 4px}
+#printSummary .sumbox{border:1px solid #9aa9b8;border-radius:6px;padding:8px 10px;white-space:pre-wrap;font-size:14px;line-height:1.5}
+#printSummary ul{margin:4px 0;padding-left:20px;font-size:13.5px}
+table.sum{width:100%;border-collapse:collapse;font-size:12.5px;margin-bottom:4px}
+table.sum th,table.sum td{border:1px solid #C9D3DE;padding:4px 6px;text-align:left;vertical-align:top}
+table.sum th{background:#003366;color:#fff}
+table.sum .r-ok{color:#2E7D32;font-weight:bold}
+table.sum .r-bad{color:#B3261E;font-weight:bold}
+.savegrid .btn{width:100%;margin-bottom:10px}
+.openlist{display:flex;flex-wrap:wrap;gap:8px;margin:6px 0}
+.openlist button{background:#fff;border:2px solid var(--navy);border-radius:16px;padding:5px 12px;font-size:14px;color:var(--navy);cursor:pointer}
+@media print{
+  @page{size:letter;margin:0.6in}
+  *{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  html,body{height:auto;display:block;background:#fff !important;background-image:none !important}
+  .topbar,.progress,.navbtn,.bottomnav,.toc,.turner,#announce,.page.cover,#savePage{display:none !important}
+  .stage{display:block;padding:0}
+  .book{position:static;width:auto;height:auto;box-shadow:none;perspective:none;border-radius:0;background:none}
+  .page{display:block !important;position:static;overflow:visible;height:auto;padding:0;background:none !important;border-radius:0;break-after:page;page-break-after:always}
+  .btn:not(.keep),.chips,.hint,.fc .hint{display:none !important}
+  textarea{display:none !important}
+  .print-text{display:block;border:1px solid #9aa9b8;border-radius:6px;padding:10px;min-height:50px;white-space:pre-wrap;font-size:15px;line-height:1.5}
+  .fc{cursor:default;break-inside:avoid}
+  .fc-in{display:block;transform:none !important}
+  .face{backface-visibility:visible;-webkit-backface-visibility:visible;transform:none !important;min-height:0 !important}
+  .front{background:#fff !important;color:#003366 !important;border:2px solid #003366;border-bottom:3px solid #F2A900;border-radius:10px 10px 0 0}
+  .front .what{color:#1a1a1a !important}
+  .back{border-top:0;border-radius:0 0 10px 10px}
+  .choice,.callout,blockquote,table,.confirm,.barrow,.col{break-inside:avoid}
+  h2,h3{break-after:avoid}
+  p{max-width:none}
+  .print-only{display:block}
+  #printSummary{break-after:page;page-break-after:always}
+  body[data-print=summary] .stage{display:none !important}
+  body[data-print=summary] #printSummary{break-after:auto;page-break-after:auto}
+}
+.printwrap{position:relative}
+.tocbtn svg{width:16px;height:16px;vertical-align:-3px;margin-right:6px}
+.printmenu{position:absolute;right:0;top:calc(100% + 8px);width:290px;background:#fff;color:var(--ink);border-top:4px solid var(--gold);border-radius:8px;box-shadow:0 12px 30px rgba(0,0,0,.35);padding:14px;z-index:30}
+.printmenu[hidden]{display:none}
+.printmenu label{font-weight:bold;color:var(--navy);font-size:14px}
+.printmenu input{width:100%;margin:4px 0 4px}
+.printmenu .btn{width:100%;margin-top:8px}
+.linkish{background:none;border:0;padding:8px 0 0;color:var(--navy);text-decoration:underline;font-size:14px;cursor:pointer}
+@media (max-width:700px){.topbar .title{display:none}.printmenu{position:fixed;left:12px;right:12px;top:56px;width:auto}}
+/* toc */
+.toc{position:fixed;inset:0;background:rgba(0,20,40,.6);display:flex;justify-content:flex-end;z-index:20}
+.toc[hidden]{display:none}
+.toc-panel{background:#fff;width:min(390px,92vw);height:100%;overflow:auto;padding:20px 22px}
+.toc-panel h3{margin:18px 0 6px;font-size:14px;color:var(--muted)}
+.toc-panel button.item{display:block;width:100%;text-align:left;background:none;border:0;border-bottom:1px solid var(--rule);padding:8px 2px;font-size:15px;cursor:pointer;color:var(--ink)}
+.toc-panel button.item[aria-current=true]{color:var(--navy);font-weight:bold}
+.bottomnav{display:none}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+
+@media (max-width:900px){
+  .cols,.cols3{grid-template-columns:1fr}
+  .stopgrid{grid-template-columns:1fr 1fr}
+  .pipe{grid-template-columns:1fr 1fr}
+  .eight{grid-template-columns:1fr}
+  .cover svg{display:none}
+}
+@media (max-width:700px){
+  .stage{padding:0;gap:0}
+  .navbtn{display:none}
+  .book{width:100vw;height:calc(100vh - 118px);border-radius:0;box-shadow:none}
+  .page{padding:16px 18px 30px 26px;border-radius:0}
+  .page.cover{padding:30px 22px}
+  .cover h1{font-size:38px}
+  h2{font-size:23px}
+  .grid2{grid-template-columns:1fr}
+  .matchrow{grid-template-columns:1fr;gap:4px}
+  .barrow{grid-template-columns:110px 1fr 46px}
+  .bottomnav{display:flex;justify-content:space-between;padding:8px 12px}
+  .bottomnav .btn{background:transparent;border-color:rgba(255,255,255,.6)}
+}
+@media (prefers-reduced-motion:reduce){
+  .fc-in,.bar,.progress span,.pix div,.spa div{transition:none}
+}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <span class="title">Hiding in Plain Sight</span>
+  <span class="count" id="count">Page 1 of 27</span>
+  <div class="printwrap" id="printWrap">
+    <button class="tocbtn" id="printBtn" aria-haspopup="true" aria-expanded="false" aria-controls="printMenu"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 9V3h10v6M7 17H4v-6a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v6h-3M7 14h10v7H7z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg>Print</button>
+    <div class="printmenu" id="printMenu" hidden>
+      <label for="nameTop">Your name</label>
+      <input type="text" id="nameTop" placeholder="First and last name">
+      <button class="btn" id="pmShort">Print my answers</button>
+      <button class="btn alt" id="pmFull">Print the whole book with my answers</button>
+      <p class="small" style="margin:10px 0 0">To keep a file instead of paper, choose "Save as PDF" in the print window.</p>
+      <button class="linkish" id="pmStatus">See what's still unanswered</button>
+    </div>
+  </div>
+  <button class="tocbtn" id="tocOpen" aria-haspopup="dialog">Contents</button>
+</div>
+<div class="progress"><span id="prog"></span></div>
+<div id="printSummary" class="print-only"></div>
+
+<main class="stage">
+  <button class="navbtn" id="prev" aria-label="Previous page">&#8249;</button>
+  <div class="book" id="book">
+
+<!-- ===================== COVER ===================== -->
+<section class="page cover" data-part="Cover" data-title="Cover">
+  <svg id="dots" viewBox="0 0 360 240" aria-hidden="true"></svg>
+  <p style="font-size:15px;color:#dfe8f2;margin:0">ARIN 310, Unit 7: Applications of AI</p>
+  <h1>Hiding in Plain Sight</h1>
+  <p class="sub">What AI is, what this course covered, and where AI already works without anyone noticing</p>
+  <div class="meta">Cynthia McGinnis</div>
+  <p class="howto">Turn pages with the arrows, your arrow keys, or a swipe. Tap any card to flip it. Your answers save in this browser as you go. When you finish, use the Print button at the top to print them or save them as a PDF.</p>
+  <button class="btn" data-goto="1">Open the book</button>
+</section>
+
+<!-- ===================== PART 1 ===================== -->
+<section class="page" data-part="Part 1: Your definition" data-title="Start here: what is AI?">
+  <h2>Start here: what is AI?</h2>
+  <p class="lead">You have spent seven weeks inside this field. A friend at dinner turns to you and asks, "So what is AI, anyway?"</p>
+  <p>Answer the way you would at that table. No textbook definition and no looking it up. Say what you actually believe now.</p>
+  <div class="row">
+    <button class="btn" id="timerBtn">Start 90 seconds</button>
+    <span class="status" id="timerOut" aria-live="polite"></span>
+  </div>
+  <label for="defFirst" class="sr">Your answer</label>
+  <textarea id="defFirst" data-save="defFirst" placeholder="AI is..."></textarea>
+  <div class="row">
+    <button class="btn alt" data-copy="defFirst">Copy my answer</button>
+    <span class="small" id="copyMsg1" aria-live="polite"></span>
+  </div>
+  <p class="small">Keep this answer. It comes back at the end of the book.</p>
+</section>
+
+<section class="page" data-part="Part 1: Your definition" data-title="Test your definition">
+  <h2>Test your definition</h2>
+  <p>Read your answer again. Check each box it passes.</p>
+  <div class="checklist" id="checklist">
+    <div class="choice"><label><input type="checkbox"> Does it say where the machine's knowledge comes from? That means rules a person wrote, patterns learned from data, or both.</label></div>
+    <div class="choice"><label><input type="checkbox"> Does it separate AI from ordinary software? A spam filter should count. A calculator shouldn't.</label></div>
+    <div class="choice"><label><input type="checkbox"> Does it avoid saying the machine thinks or understands the way a person does?</label></div>
+    <div class="choice"><label><input type="checkbox"> Does it cover more than chatbots? It should also fit a robot vacuum and Netflix recommendations.</label></div>
+  </div>
+  <p class="status" id="checkOut" aria-live="polite">Your answer passes 0 of 4.</p>
+  <div class="callout"><p>Missed a box? Leave your answer alone for now. You'll rewrite it at the end of the book.</p></div>
+</section>
+
+<section class="page" data-part="Part 1: Your definition" data-title="Would your answer call these AI?">
+  <h2>Would your answer call these AI?</h2>
+  <p>Pick AI or Not AI for each system, using your own answer as the rule. Then see what is inside it.</p>
+  <div class="grid2">
+    <div class="choice"><p class="q">A calculator app</p><div class="opts"><button data-v="a">AI</button><button data-v="n">Not AI</button></div>
+      <div class="reveal" hidden>Every rule inside was written by a person. It never learns and never guesses. Most answers draw the line here.</div></div>
+    <div class="choice"><p class="q">Gmail's spam filter</p><div class="opts"><button data-v="a">AI</button><button data-v="n">Not AI</button></div>
+      <div class="reveal" hidden>It learned what spam looks like from millions of emails people marked as spam. Nobody wrote a rule for each scam. Machine learning.</div></div>
+    <div class="choice"><p class="q">A thermostat set to 70&deg;F</p><div class="opts"><button data-v="a">AI</button><button data-v="n">Not AI</button></div>
+      <div class="reveal" hidden>One fixed rule: below 70, heat on. A smart thermostat that learns your schedule is a different machine.</div></div>
+    <div class="choice"><p class="q">Your GPS route to the base gate</p><div class="opts"><button data-v="a">AI</button><button data-v="n">Not AI</button></div>
+      <div class="reveal" hidden>Two parts. The route itself comes from shortest-path search, the family of A*, an algorithm built in 1968 for SRI's Shakey robot project (Hart et al., 1968). It does not learn. The arrival time comes from machine learning: Google Maps and DeepMind trained graph neural networks on traffic history and improved ETAs in cities including Tokyo and Osaka (Lange &amp; Perez, 2020).</div></div>
+    <div class="choice"><p class="q">Netflix's "Top Picks for You" row</p><div class="opts"><button data-v="a">AI</button><button data-v="n">Not AI</button></div>
+      <div class="reveal" hidden>Built from what millions of members watched, finished, and skipped. A recommender system, Unit 5.</div></div>
+    <div class="choice"><p class="q">Microsoft Copilot</p><div class="opts"><button data-v="a">AI</button><button data-v="n">Not AI</button></div>
+      <div class="reveal" hidden>A large language model that writes by predicting the next probable token. GenAI, Unit 3.</div></div>
+  </div>
+  <div class="callout"><p>The GPS is the hard case. Some definitions count search as AI. Others require learning.</p></div>
+</section>
+
+<!-- ===================== PART 2 ===================== -->
+<section class="page" data-part="Part 2: The course in eight stops" data-title="Eight stops, one question">
+  <h2>Eight stops, one question</h2>
+  <p class="lead">Every unit asked the same question about a different kind of machine: how does the machine know?</p>
+  <p>Tap a stop to jump to it, or turn the page to go in order.</p>
+  <div class="stopgrid">
+    <button class="stop" data-goto="5"><b>1. History</b><span>Where the idea came from, and why it kept crashing</span></button>
+    <button class="stop" data-goto="6"><b>2. Learning machines</b><span>Machine learning and deep learning</span></button>
+    <button class="stop" data-goto="7"><b>3. Language</b><span>NLP and GenAI</span></button>
+    <button class="stop" data-goto="8"><b>4. Seeing and practicing</b><span>Computer vision and reinforcement learning</span></button>
+    <button class="stop" data-goto="9"><b>5. Recommenders</b><span>People like you liked this</span></button>
+    <button class="stop" data-goto="10"><b>6. Robots and bots</b><span>Robotics and RPA</span></button>
+    <button class="stop" data-goto="11"><b>7. Applications</b><span>Tonight</span></button>
+    <button class="stop" data-goto="11"><b>8. The future</b><span>Next week</span></button>
+  </div>
+</section>
+
+<section class="page" data-part="Part 2: The course in eight stops" data-title="Stop 1: History">
+  <h2>Stop 1: Where the idea came from</h2>
+  <p>AI is older than most people think, and its history runs in booms and busts. Flip each card.</p>
+  <div class="cards">
+    <div class="fc" role="button" tabindex="0" aria-pressed="false"><div class="fc-in">
+      <div class="face front"><div class="big">1950: Can a machine think?</div><div class="hint">Tap to flip</div></div>
+      <div class="face back">Alan Turing proposed a test: if you can't tell a machine's answers from a person's, does the difference matter? The argument he started is still running (Turing, 1950).</div></div></div>
+    <div class="fc" role="button" tabindex="0" aria-pressed="false"><div class="fc-in">
+      <div class="face front"><div class="big">1956: The field gets a name</div><div class="hint">Tap to flip</div></div>
+      <div class="face back">John McCarthy's summer workshop at Dartmouth coined "artificial intelligence." The organizers expected major progress in one summer (Taulli, 2019).</div></div></div>
+    <div class="fc" role="button" tabindex="0" aria-pressed="false"><div class="fc-in">
+      <div class="face front"><div class="big">1970s and late 1980s: Two AI winters</div><div class="hint">Tap to flip</div></div>
+      <div class="face back">Promises outran results. Funding collapsed after Britain's 1973 Lighthill Report, then again when expert systems proved too costly to maintain (Taulli, 2019).</div></div></div>
+    <div class="fc" role="button" tabindex="0" aria-pressed="false"><div class="fc-in">
+      <div class="face front"><div class="big">2012: Deep learning wins</div><div class="hint">Tap to flip</div></div>
+      <div class="face back">A deep neural network trained on GPUs crushed the ImageNet image contest (Krizhevsky et al., 2012). More data and more computing power revived a decades-old idea.</div></div></div>
+    <div class="fc" role="button" tabindex="0" aria-pressed="false"><div class="fc-in">
+      <div class="face front"><div class="big">2022: GenAI goes public</div><div class="hint">Tap to flip</div></div>
+      <div class="face back">ChatGPT reached the public in November 2022. For the first time, most people used an AI system they could talk to.</div></div></div>
+  </div>
+</section>
+
+<section class="page" data-part="Part 2: The course in eight stops" data-title="Stop 2: Learning machines">
+  <h2>Stop 2: Who writes the rules?</h2>
+  <p>The core shift in this course fits in one diagram. Switch between the two and watch which box moves.</p>
+  <div class="seg" role="group" aria-label="Choose a diagram">
+    <button id="tradBtn" aria-pressed="true">Traditional programming</button>
+    <button id="mlBtn" aria-pressed="false">Machine learning</button>
+  </div>
+  <div class="cols" style="margin-top:12px">
+    <div>
+      <div id="tradDiag">
+        <div class="flow"><span class="box key">Rules people write</span><span class="arrow">+</span><span class="box">Data</span><span class="arrow">&#8594;</span><span class="box made">Answers</span></div>
+        <p>A tax calculator. A programmer types in every bracket and every exception. When the law changes, a person rewrites the rules.</p>
+      </div>
+      <div id="mlDiag" hidden>
+        <div class="flow"><span class="box">Data</span><span class="arrow">+</span><span class="box">Answers people labeled</span><span class="arrow">&#8594;</span><span class="box made">Rules the machine learns</span></div>
+        <p>A spam filter. You feed it thousands of emails already marked spam or not spam. It finds the patterns itself, and nobody can list every rule it learned.</p>
+      </div>
+      <div class="callout"><p>Why it matters: a spam filter can catch a scam email nobody has ever seen, because it learned the pattern. But nobody can read the rules it learned, so when it blocks a real email, no one can say exactly why.</p></div>
+    </div>
+    <div>
+      <svg viewBox="0 0 300 250" role="img" aria-label="Nested circles: deep learning inside machine learning inside AI">
+        <ellipse cx="150" cy="125" rx="145" ry="118" fill="#F2F6FA" stroke="#003366" stroke-width="2"/>
+        <ellipse cx="160" cy="145" rx="100" ry="85" fill="#fff" stroke="#003366" stroke-width="2"/>
+        <ellipse cx="170" cy="165" rx="56" ry="48" fill="#003366" stroke="#F2A900" stroke-width="3"/>
+        <text x="150" y="36" text-anchor="middle" font-family="Arial" font-size="16" font-weight="bold" fill="#003366">AI</text>
+        <text x="160" y="84" text-anchor="middle" font-family="Arial" font-size="15" font-weight="bold" fill="#003366">Machine learning</text>
+        <text x="170" y="162" text-anchor="middle" font-family="Arial" font-size="14" font-weight="bold" fill="#fff">Deep</text>
+        <text x="170" y="180" text-anchor="middle" font-family="Arial" font-size="14" font-weight="bold" fill="#fff">learning</text>
+      </svg>
+      <p class="small">Deep learning sits inside machine learning: it is machine learning with many-layered neural networks.</p>
+    </div>
+  </div>
+</section>
+
+<section class="page" data-part="Part 2: The course in eight stops" data-title="Stop 3: Language">
+  <h2>Stop 3: The next-word machine</h2>
+  <p>A large language model does one thing, over and over: predict the next token. Here is one sentence the way a model sees it.</p>
+  <p class="msg" style="font-size:19px">Thank you for calling. How can I <b id="nwSlot" style="color:#003366;border-bottom:3px solid #F2A900">____</b></p>
+  <p class="small">Illustrative probabilities for the next word:</p>
+  <div id="nwBars"></div>
+  <div class="callout"><p><b>The question:</b> which word comes next? Press the button and let the model choose.</p></div>
+  <div class="row">
+    <button class="btn" id="nwOne">Generate once</button>
+    <button class="btn alt" id="nwTwenty">Generate 20 times</button>
+    <button class="btn alt" id="nwReset">Reset</button>
+    <span class="status" id="nwTally" aria-live="polite"></span>
+  </div>
+  <p>The model picks by probability, so the same prompt can come out differently each time. Nothing here checks a fact; the model only knows which words tend to follow. Your Unit 3 persona experiment worked the same way: new words in the prompt shifted the probabilities, so the "analysis" shifted too.</p>
+</section>
+
+<section class="page" data-part="Part 2: The course in eight stops" data-title="Stop 4: Seeing and practicing">
+  <h2>Stop 4: Seeing and practicing</h2>
+  <div class="cols">
+    <div>
+      <h3 style="margin-top:0">Computer vision</h3>
+      <p>You see a 7. The model sees a grid of numbers from 0 (black) to 255 (white).</p>
+      <div class="pix" id="pix" aria-label="Ten by ten pixel grid of a handwritten seven"></div>
+      <div class="row"><button class="btn alt" id="pixBtn" aria-pressed="false">Show what the machine sees</button></div>
+      <p class="small">A vision model learns which patterns of numbers mean "7," or "pedestrian," or "weed." Early layers find edges, later layers find shapes, the last layers name objects.</p>
+    </div>
+    <div>
+      <h3 style="margin-top:0">Reinforcement learning</h3>
+      <div class="cards" style="grid-template-columns:1fr">
+        <div class="fc" role="button" tabindex="0" aria-pressed="false"><div class="fc-in">
+          <div class="face front"><div class="big">No answer key. So how does it learn?</div><div class="hint">Tap to flip</div></div>
+          <div class="face back">An agent tries an action, gets a reward or a penalty, and adjusts. Thousands of tries later it has a strategy nobody wrote. AlphaGo learned Go partly by playing itself (Silver et al., 2016). Your Unit 4 grid-world demo did the same thing on a small maze.</div></div></div>
+        <div class="fc" role="button" tabindex="0" aria-pressed="false"><div class="fc-in">
+          <div class="face front"><div class="big">What goes wrong?</div><div class="hint">Tap to flip</div></div>
+          <div class="face back">The agent chases the reward you wrote, not the goal you meant. Reward the wrong thing and it finds a loophole.</div></div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="page" data-part="Part 2: The course in eight stops" data-title="Stop 5: Recommenders">
+  <h2>Stop 5: People like you</h2>
+  <p>A recommender guesses what you'll like from what similar people liked. Start with the data: three viewers, six shows.</p>
+  <table class="data" id="recTable">
+    <tr><th></th><th>Space drama</th><th>Cooking contest</th><th>WWII documentary</th><th>Heist thriller</th><th>Romantic comedy</th><th>Nature series</th></tr>
+  </table>
+  <p class="small">Illustrative data. &#10003; liked, &#10007; skipped.</p>
+  <div class="callout"><p><b>The question:</b> which of the last three shows should the system put at the top of your row?</p></div>
+  <p><b>Rate the first three shows yourself:</b></p>
+  <div id="recYou" class="row"></div>
+  <div id="recOut" aria-live="polite"></div>
+</section>
+
+<section class="page" data-part="Part 2: The course in eight stops" data-title="Stop 6: Robots and bots">
+  <h2>Stop 6: Bodies and bots</h2>
+  <div class="cols">
+    <div>
+      <h3 style="margin-top:0">A robot runs a loop</h3>
+      <div class="spa" id="spa"><div>Sense</div><div>Plan</div><div>Act</div></div>
+      <p id="spaText" style="min-height:78px">A robot vacuum is about to hit a chair leg. Step through one pass of its loop.</p>
+      <div class="row"><button class="btn" id="spaBtn">Next step</button></div>
+    </div>
+    <div>
+      <h3 style="margin-top:0">RPA is software, not a machine</h3>
+      <p class="small" style="margin-bottom:6px">Sort each one.</p>
+      <div class="choice" data-answer="rpa"><p class="q">A bot copies invoice totals from email into a spreadsheet by replaying clicks a person recorded.</p>
+        <div class="opts"><button data-v="rpa">RPA</button><button data-v="rpaai">RPA plus AI</button><button data-v="robot">Robot</button></div>
+        <div class="reveal" hidden>Scripted steps, no learning. It breaks when the screen layout changes.</div></div>
+      <div class="choice" data-answer="rpaai"><p class="q">A bot reads a scanned invoice it has never seen and pulls out the total.</p>
+        <div class="opts"><button data-v="rpa">RPA</button><button data-v="rpaai">RPA plus AI</button><button data-v="robot">Robot</button></div>
+        <div class="reveal" hidden>Reading a messy scan takes computer vision and language models. The bot still follows a script; AI handles the messy step.</div></div>
+      <div class="choice" data-answer="robot"><p class="q">A vacuum steers around a couch that wasn't there yesterday.</p>
+        <div class="opts"><button data-v="rpa">RPA</button><button data-v="rpaai">RPA plus AI</button><button data-v="robot">Robot</button></div>
+        <div class="reveal" hidden>A physical machine running sense, plan, act on new data.</div></div>
+    </div>
+  </div>
+</section>
+
+<section class="page" data-part="Part 2: The course in eight stops" data-title="Stops 7 and 8">
+  <h2>Stops 7 and 8: Tonight and next week</h2>
+  <div class="cols">
+    <div>
+      <h3 style="margin-top:0">Stop 7: Applications</h3>
+      <p>Tonight the question moves from how it works to what it's worth: who uses it, what it cost, who it helps, and who it could hurt.</p>
+      <blockquote>"As soon as it works, no one calls it AI anymore."<cite>John McCarthy, who coined the term "artificial intelligence," quoted in Vardi (2012)</cite></blockquote>
+      <p class="small">Watch for it in tonight's applications. Most of them stopped feeling like AI years ago.</p>
+    </div>
+    <div>
+      <h3 style="margin-top:0">Stop 8: The future, a preview</h3>
+      <div class="cards" style="grid-template-columns:1fr">
+        <div class="fc" role="button" tabindex="0" aria-pressed="false"><div class="fc-in">
+          <div class="face front" style="min-height:96px"><div class="big">Agents</div><div class="hint">Tap to flip</div></div>
+          <div class="face back" style="min-height:96px">GenAI that takes actions, not just answers: booking, filing, clicking through apps for you. Who checks its work?</div></div></div>
+        <div class="fc" role="button" tabindex="0" aria-pressed="false"><div class="fc-in">
+          <div class="face front" style="min-height:96px"><div class="big">Rules</div><div class="hint">Tap to flip</div></div>
+          <div class="face back" style="min-height:96px">The EU AI Act (2024) sorts AI by risk. Some uses are banned outright; high-risk uses, like hiring tools, face testing and oversight requirements.</div></div></div>
+        <div class="fc" role="button" tabindex="0" aria-pressed="false"><div class="fc-in">
+          <div class="face front" style="min-height:96px"><div class="big">Your field</div><div class="hint">Tap to flip</div></div>
+          <div class="face back" style="min-height:96px">Which tasks in your job move to machines first? Which ones will always need a person to sign off?</div></div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="page" data-part="Part 2: The course in eight stops" data-title="Checkpoint">
+  <h2>Checkpoint: fill in the blanks</h2>
+  <p>One blank per stop. Two words in the bank are traps.</p>
+  <div class="bank"><span>data</span><span>subset</span><span>token</span><span>numbers</span><span>rewards</span><span>filtering</span><span>plan</span><span>scripted</span><span>rules</span><span>memory</span></div>
+  <div class="fib" id="fib">
+    <p>1. In traditional programming, people write the rules. In machine learning, the system learns the rules from <input type="text" class="blank" data-accept="data|examples|training data|labeled data|labelled data" aria-label="Blank 1">.</p>
+    <p>2. Deep learning is a <input type="text" class="blank" data-accept="subset|type|kind|part|branch" aria-label="Blank 2"> of machine learning, not a separate field.</p>
+    <p>3. A large language model writes by predicting the next probable <input type="text" class="blank" data-accept="token|tokens|word|words" aria-label="Blank 3">.</p>
+    <p>4. To a computer vision model, a photo is a grid of <input type="text" class="blank" data-accept="numbers|pixels|pixel values|values|number" aria-label="Blank 4">.</p>
+    <p>5. A reinforcement learning agent improves by chasing <input type="text" class="blank" data-accept="rewards|reward" aria-label="Blank 5">.</p>
+    <p>6. A recommender that says "people like you liked this" uses collaborative <input type="text" class="blank" data-accept="filtering" aria-label="Blank 6">.</p>
+    <p>7. A robot repeats a loop: sense, <input type="text" class="blank" data-accept="plan|think|decide" aria-label="Blank 7">, act.</p>
+    <p>8. On its own, RPA follows <input type="text" class="blank" data-accept="scripted|recorded|fixed|preset|set|programmed" aria-label="Blank 8"> steps and does not learn.</p>
+  </div>
+  <div class="row">
+    <button class="btn" id="fibCheck">Check answers</button>
+    <button class="btn alt" id="fibShow">Show answers</button>
+    <button class="btn alt" id="fibClear">Clear</button>
+    <span class="status" id="fibOut" aria-live="polite"></span>
+  </div>
+</section>
+
+<!-- ===================== PART 3 ===================== -->
+<section class="page" data-part="Part 3: AI at work" data-title="Introducing Bank of America's Erica">
+  <h2>Introducing Bank of America's Erica</h2>
+  <p class="lead">An application of AI in banking.</p>
+  <div class="cols">
+    <div>
+      <p><b>What it is.</b> Erica is the virtual assistant inside Bank of America's mobile app, launched in 2018. You type a request, and Erica pulls up account details, moves money, or connects you to a person.</p>
+      <p><b>The problem it solved.</b> Customers kept calling the bank for simple things, like ordering checks, because the features were buried three menus deep on a five-inch screen (Crosman, 2026).</p>
+      <p><b>The AI it uses.</b> Natural language processing and machine learning read your message and match it to a set of prepared answers. The bank states that Erica does not use GenAI (Bank of America, n.d.).</p>
+    </div>
+    <div>
+      <div class="callout" style="margin-top:0">
+        <p><b>By the numbers</b></p>
+        <p>More than 3.2 billion interactions since 2018 (Bank of America, 2026).</p>
+        <p>24.6 million active users in the second quarter of 2026, up 23% from a year earlier (Yahoo Finance, 2026).</p>
+      </div>
+      <a class="btn" href="bank-of-america.html" target="_blank" rel="noopener" style="display:inline-block;text-decoration:none;margin-top:6px">Open the full Bank of America case</a>
+      <p class="small" style="margin-top:8px">Opens in a new tab. Your answers in this book stay saved.</p>
+    </div>
+  </div>
+</section>
+
+<section class="page" data-part="Part 3: AI at work" data-title="Six more: guess first">
+  <h2>Six more applications: guess first</h2>
+  <p>Each of these runs mainly on a different kind of AI from this course. Match each one, then check.</p>
+  <div id="match"></div>
+  <div class="row">
+    <button class="btn" id="matchCheck">Check my matches</button>
+    <span class="status" id="matchOut" aria-live="polite"></span>
+  </div>
+  <p class="small">The next two pages show how each one knows.</p>
+</section>
+
+<section class="page" data-part="Part 3: AI at work" data-title="How they know, part 1">
+  <h2>How they know, part 1</h2>
+  <div class="cards" style="grid-template-columns:repeat(auto-fit,minmax(240px,1fr))">
+    <div class="fc" role="button" tabindex="0" aria-pressed="false"><div class="fc-in">
+      <div class="face front" style="min-height:300px"><div><div class="big">Netflix</div><div class="what">The rows on your home screen, ordered just for you</div></div><div class="hint">Tap to see how it knows</div></div>
+      <div class="face back" style="min-height:300px"><div class="kind">Recommender system (Unit 5)</div>It learns from what millions of members play, finish, and abandon, then ranks titles for each person. Netflix engineers reported that recommendations influence about 80% of the hours members stream.<div class="src">Gomez-Uribe &amp; Hunt (2015)</div></div></div></div>
+    <div class="fc" role="button" tabindex="0" aria-pressed="false"><div class="fc-in">
+      <div class="face front" style="min-height:300px"><div><div class="big">Waymo</div><div class="what">Paid rides with nobody in the driver's seat</div></div><div class="hint">Tap to see how it knows</div></div>
+      <div class="face back" style="min-height:300px"><div class="kind">Computer vision plus robotics (Units 4 and 6)</div>Lidar, radar, and 29 cameras on its Jaguar I-PACE vehicles feed perception models that label cars, cyclists, and pedestrians. Prediction models forecast what each will do, and a planner picks the path. Waymo says all three stages use machine learning. Sense, plan, act at street scale.<div class="src">Waymo (2021); Waymo (n.d.)</div></div></div></div>
+    <div class="fc" role="button" tabindex="0" aria-pressed="false"><div class="fc-in">
+      <div class="face front" style="min-height:300px"><div><div class="big">Google Translate</div><div class="what">A sign in Japanese becomes English on your phone</div></div><div class="hint">Tap to see how it knows</div></div>
+      <div class="face back" style="min-height:300px"><div class="kind">NLP: neural machine translation (Unit 3)</div>Since 2016, a neural network trained on millions of human-translated sentence pairs translates whole sentences at once instead of phrase by phrase. Idioms and local slang still trip it up, for the reason you saw at Stop 3: it predicts likely words, it doesn't know what you meant.<div class="src">Wu et al. (2016)</div></div></div></div>
+  </div>
+</section>
+
+<section class="page" data-part="Part 3: AI at work" data-title="How they know, part 2">
+  <h2>How they know, part 2</h2>
+  <div class="cards" style="grid-template-columns:repeat(auto-fit,minmax(240px,1fr))">
+    <div class="fc" role="button" tabindex="0" aria-pressed="false"><div class="fc-in">
+      <div class="face front" style="min-height:300px"><div><div class="big">AlphaFold</div><div class="what">The 3D shape of a protein, predicted from its recipe</div></div><div class="hint">Tap to see how it knows</div></div>
+      <div class="face back" style="min-height:300px"><div class="kind">Deep learning (Unit 2)</div>Trained on protein structures scientists had already solved in the lab, it predicts a protein's shape from its amino acid sequence. It has predicted structures for virtually all of the roughly 200 million known proteins. Its creators shared the 2024 Nobel Prize in Chemistry.<div class="src">Jumper et al. (2021); Royal Swedish Academy of Sciences (2024)</div></div></div></div>
+    <div class="fc" role="button" tabindex="0" aria-pressed="false"><div class="fc-in">
+      <div class="face front" style="min-height:300px"><div><div class="big">Amazon's robot fleet</div><div class="what">A million warehouse robots that must not collide</div></div><div class="hint">Tap to see how it knows</div></div>
+      <div class="face back" style="min-height:300px"><div class="kind">Robotics plus GenAI (Units 6 and 3)</div>Amazon's millionth robot went to a fulfillment center in Japan in 2025. A GenAI foundation model called DeepFleet, trained on the fleet's own movement data, coordinates robot traffic. Amazon says it cuts robot travel time by 10%; that is the company's own figure.<div class="src">Amazon (2025); Evans (2025)</div></div></div></div>
+    <div class="fc" role="button" tabindex="0" aria-pressed="false"><div class="fc-in">
+      <div class="face front" style="min-height:300px"><div><div class="big">Microsoft Copilot</div><div class="what">The assistant built into Microsoft 365</div></div><div class="hint">Tap to see how it knows</div></div>
+      <div class="face back" style="min-height:300px"><div class="kind">Large language model, GenAI (Unit 3)</div>It predicts the next probable token from patterns in its training text. It can pull in web results or your files, but it still writes by prediction, so it can state a wrong thing fluently. Compare Erica: same banking question, one system you can audit, one you can't fully predict.<div class="src">Unit 3 course materials</div></div></div></div>
+  </div>
+</section>
+
+<!-- ===================== PART 4 ===================== -->
+<section class="page" data-part="Part 4: Back to your definition" data-title="Back to where you started">
+  <h2>Back to where you started</h2>
+  <p>Here is what you wrote at the start. Rewrite it with everything you just saw. What would you add? What would you cut? Does it pass all four checks from page 3 now?</p>
+  <div class="cols">
+    <div><h3 style="margin-top:0">Your first answer</h3><div class="defbox" id="defShow"></div></div>
+    <div><h3 style="margin-top:0">Your answer now</h3>
+      <label for="defNow" class="sr">Your answer now</label>
+      <textarea id="defNow" data-save="defNow" placeholder="AI is..."></textarea></div>
+  </div>
+  <div class="row">
+    <button class="btn" id="copyBoth">Copy both answers</button>
+    <span class="small" id="copyMsg2" aria-live="polite"></span>
+  </div>
+</section>
+
+<section class="page" id="savePage" data-part="Part 4: Back to your definition" data-title="Save your answers">
+  <h2>Save your answers</h2>
+  <p class="lead">Print this book or save it as a PDF to keep everything you wrote and chose.</p>
+  <div class="cols savegrid">
+    <div>
+      <label for="studentName"><b>Your name</b></label>
+      <input type="text" id="studentName" data-save="name" placeholder="First and last name" style="width:100%;margin:6px 0 14px">
+      <div id="saveStatus" aria-live="polite"></div>
+    </div>
+    <div>
+      <button class="btn" id="printShort">Print my answers only</button>
+      <button class="btn alt" id="printFull">Print the whole book with my answers</button>
+      <div class="callout"><p><b>To get a file instead of paper:</b> in the print window, change the printer or destination to "Save as PDF," then save. On a phone, open the browser's Share menu, choose Print, and share or save the PDF.</p></div>
+      <p class="small">"My answers only" prints one or two summary pages. "The whole book" adds every page after the summary, with your choices marked and every flip card printed front and back.</p>
+      <p class="small">Your answers stay in this browser until you clear them. On a shared computer, clear them when you finish.</p>
+      <button class="btn alt" id="clearAll">Clear all my answers</button>
+    </div>
+  </div>
+</section>
+
+
+<section class="page" data-part="Part 4: Back to your definition" data-title="Your turn">
+  <h2>Your turn</h2>
+  <p class="lead">Your group now researches one application and how it uses AI.</p>
+  <ol class="steps">
+    <li>Claim a topic on the Loop sign-up page.</li>
+    <li>Research first: one Unit 7 reading plus one article you find with Semantic Scholar or another research AI tool.</li>
+    <li>Write your mechanism description and research notes.</li>
+    <li>Build with Prompt 1. Fact-check every slide against your sources. Use Prompt 2 or Prompt 3 only where needed.</li>
+    <li>Present in five minutes, then submit the .html file and your cover document.</li>
+  </ol>
+  <div class="callout"><p>The test hasn't changed since Unit 1. After your five minutes, could a classmate explain how the machine knows?</p></div>
+</section>
+
+<section class="page srcs" data-part="Sources" data-title="Sources">
+  <h2>Sources</h2>
+  <p>Amazon. (2025, July). <i>Amazon deploys over 1 million robots and launches new AI foundation model.</i> <a href="https://www.aboutamazon.com/news/operations/amazon-million-robots-ai-foundation-model" target="_blank" rel="noopener">https://www.aboutamazon.com/news/operations/amazon-million-robots-ai-foundation-model</a></p>
+  <p>Bank of America. (n.d.). <i>Erica: Virtual financial assistant.</i> <a href="https://info.bankofamerica.com/en/digital-banking/erica" target="_blank" rel="noopener">https://info.bankofamerica.com/en/digital-banking/erica</a></p>
+  <p>Bank of America. (2026, March). <i>BofA AI and digital innovations fuel 30 billion client interactions</i> [Press release]. <a href="https://newsroom.bankofamerica.com/content/newsroom/press-releases/2026/03/bofa-ai-and-digital-innovations-fuel-30-billion-client-interacti.html" target="_blank" rel="noopener">https://newsroom.bankofamerica.com/content/newsroom/press-releases/2026/03/bofa-ai-and-digital-innovations-fuel-30-billion-client-interacti.html</a></p>
+  <p>Crosman, P. (2026, January 22). How Bank of America's Erica does the work of 11,000 people. <i>American Banker.</i> <a href="https://www.americanbanker.com/news/how-bank-of-americas-erica-does-the-work-of-11-000-people" target="_blank" rel="noopener">https://www.americanbanker.com/news/how-bank-of-americas-erica-does-the-work-of-11-000-people</a></p>
+  <p>European Union. (2024). <i>Regulation (EU) 2024/1689 (Artificial Intelligence Act).</i> Official Journal of the European Union. <a href="https://eur-lex.europa.eu/eli/reg/2024/1689/oj" target="_blank" rel="noopener">https://eur-lex.europa.eu/eli/reg/2024/1689/oj</a></p>
+  <p>Evans, S. (2025, July 2). Amazon launches new AI model, deploys 1 millionth robot. <i>AI Business.</i> <a href="https://aibusiness.com/foundation-models/amazon-launches-new-ai-model-deploys-1-millionth-robot" target="_blank" rel="noopener">https://aibusiness.com/foundation-models/amazon-launches-new-ai-model-deploys-1-millionth-robot</a></p>
+  <p>Gomez-Uribe, C. A., &amp; Hunt, N. (2015). The Netflix recommender system: Algorithms, business value, and innovation. <i>ACM Transactions on Management Information Systems, 6</i>(4), Article 13. <a href="https://doi.org/10.1145/2843948" target="_blank" rel="noopener">https://doi.org/10.1145/2843948</a></p>
+  <p>Hart, P. E., Nilsson, N. J., &amp; Raphael, B. (1968). A formal basis for the heuristic determination of minimum cost paths. <i>IEEE Transactions on Systems Science and Cybernetics, 4</i>(2), 100-107. <a href="https://doi.org/10.1109/TSSC.1968.300136" target="_blank" rel="noopener">https://doi.org/10.1109/TSSC.1968.300136</a></p>
+  <p>Jumper, J., Evans, R., Pritzel, A., Green, T., Figurnov, M., Ronneberger, O., . . . Hassabis, D. (2021). Highly accurate protein structure prediction with AlphaFold. <i>Nature, 596,</i> 583-589. <a href="https://doi.org/10.1038/s41586-021-03819-2" target="_blank" rel="noopener">https://doi.org/10.1038/s41586-021-03819-2</a></p>
+  <p>Krizhevsky, A., Sutskever, I., &amp; Hinton, G. E. (2012). ImageNet classification with deep convolutional neural networks. <i>Advances in Neural Information Processing Systems, 25.</i></p>
+  <p>Lange, O., &amp; Perez, L. (2020, September 3). <i>Traffic prediction with advanced graph neural networks.</i> Google DeepMind. <a href="https://deepmind.google/discover/blog/traffic-prediction-with-advanced-graph-neural-networks/" target="_blank" rel="noopener">https://deepmind.google/discover/blog/traffic-prediction-with-advanced-graph-neural-networks/</a></p>
+  <p>Royal Swedish Academy of Sciences. (2024, October 9). <i>The Nobel Prize in Chemistry 2024</i> [Press release]. <a href="https://www.nobelprize.org/prizes/chemistry/2024/press-release/" target="_blank" rel="noopener">https://www.nobelprize.org/prizes/chemistry/2024/press-release/</a></p>
+  <p>Silver, D., Huang, A., Maddison, C. J., Guez, A., Sifre, L., van den Driessche, G., . . . Hassabis, D. (2016). Mastering the game of Go with deep neural networks and tree search. <i>Nature, 529,</i> 484-489. <a href="https://doi.org/10.1038/nature16961" target="_blank" rel="noopener">https://doi.org/10.1038/nature16961</a></p>
+  <p>Taulli, T. (2019). <i>Artificial intelligence basics: A non-technical introduction.</i> Apress.</p>
+  <p>Turing, A. M. (1950). Computing machinery and intelligence. <i>Mind, 59</i>(236), 433-460.</p>
+  <p>Vardi, M. Y. (2012). Artificial intelligence: Past and future. <i>Communications of the ACM, 55</i>(1), 5. <a href="https://cacm.acm.org/magazines/2012/1/144824-artificial-intelligence-past-and-future/fulltext" target="_blank" rel="noopener">https://cacm.acm.org/magazines/2012/1/144824-artificial-intelligence-past-and-future/fulltext</a></p>
+  <p>Waymo. (2021, October). <i>The Waymo Driver handbook: Perception.</i> <a href="https://waymo.com/blog/2021/10/the-waymo-driver-handbook-perception" target="_blank" rel="noopener">https://waymo.com/blog/2021/10/the-waymo-driver-handbook-perception</a></p>
+  <p>Waymo. (n.d.). <i>Waymo Driver technology.</i> <a href="https://waymo.com/tech/" target="_blank" rel="noopener">https://waymo.com/tech/</a></p>
+  <p>Wu, Y., Schuster, M., Chen, Z., Le, Q. V., Norouzi, M., Macherey, W., . . . Dean, J. (2016). <i>Google's neural machine translation system: Bridging the gap between human and machine translation.</i> arXiv. <a href="https://arxiv.org/abs/1609.08144" target="_blank" rel="noopener">https://arxiv.org/abs/1609.08144</a></p>
+  <p>Yahoo Finance. (2026, July 14). <i>Bank of America's chatbot Erica continues to amplify digital engagement.</i> <a href="https://finance.yahoo.com/technology/ai/articles/bank-america-chatbot-erica-continues-160000281.html" target="_blank" rel="noopener">https://finance.yahoo.com/technology/ai/articles/bank-america-chatbot-erica-continues-160000281.html</a></p>
+  <p style="margin-top:18px;text-indent:0;padding-left:0;border-top:2px solid #F2A900;padding-top:10px;color:#4a5a6a">This flipbook was drafted with the assistance of an AI tool (Claude, Anthropic) and reviewed and finalized by me before posting.</p>
+</section>
+
+  </div>
+  <button class="navbtn" id="next" aria-label="Next page">&#8250;</button>
+</main>
+
+<div class="bottomnav">
+  <button class="btn" id="prev2">Previous</button>
+  <button class="btn" id="next2">Next</button>
+</div>
+
+<div class="toc" id="toc" hidden role="dialog" aria-modal="true" aria-label="Contents">
+  <div class="toc-panel">
+    <div class="row" style="justify-content:space-between;margin:0"><b style="color:#003366;font-size:18px">Contents</b><button class="btn alt" id="tocClose">Close</button></div>
+    <div id="tocList"></div>
+  </div>
+</div>
+<div class="sr" aria-live="polite" id="announce"></div>
+
+<script>
+(function(){
+  "use strict";
+  var book = document.getElementById('book');
+  var pages = Array.prototype.slice.call(book.querySelectorAll('.page'));
+  var cur = 0, busy = false;
+  var reduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  var store = {
+    get: function(k){ try { return window.localStorage.getItem('u7flip:' + k); } catch(e){ return null; } },
+    set: function(k, v){ try { window.localStorage.setItem('u7flip:' + k, v); } catch(e){} }
+  };
+
+  /* ---------- running heads and contents ---------- */
+  pages.forEach(function(p, i){
+    if (i === 0) return;
+    var rh = document.createElement('div');
+    rh.className = 'runhead';
+    rh.innerHTML = '<span>' + p.dataset.part + '</span><span>' + (i + 1) + '</span>';
+    p.insertBefore(rh, p.firstChild);
+  });
+  var tocList = document.getElementById('tocList');
+  var lastPart = '';
+  pages.forEach(function(p, i){
+    if (p.dataset.part !== lastPart){
+      var h = document.createElement('h3'); h.textContent = p.dataset.part; tocList.appendChild(h);
+      lastPart = p.dataset.part;
+    }
+    var b = document.createElement('button');
+    b.className = 'item'; b.textContent = (i + 1) + '. ' + p.dataset.title;
+    b.addEventListener('click', function(){ closeToc(); go(i); });
+    tocList.appendChild(b);
+  });
+  var toc = document.getElementById('toc');
+  function openToc(){ toc.hidden = false; document.getElementById('tocClose').focus(); }
+  function closeToc(){ toc.hidden = true; document.getElementById('tocOpen').focus(); }
+  document.getElementById('tocOpen').addEventListener('click', openToc);
+  document.getElementById('tocClose').addEventListener('click', closeToc);
+  toc.addEventListener('click', function(e){ if (e.target === toc) closeToc(); });
+
+  /* ---------- page turning ---------- */
+  function show(i){ pages.forEach(function(p, k){ p.classList.toggle('current', k === i); }); }
+  function copyValues(src, dst){
+    var a = src.querySelectorAll('textarea,input,select'), b = dst.querySelectorAll('textarea,input,select');
+    for (var k = 0; k < a.length && k < b.length; k++){
+      if (a[k].type === 'checkbox') b[k].checked = a[k].checked; else b[k].value = a[k].value;
+    }
+  }
+  function after(i){
+    cur = i;
+    document.getElementById('count').textContent = 'Page ' + (i + 1) + ' of ' + pages.length;
+    document.getElementById('prog').style.width = ((i) / (pages.length - 1) * 100) + '%';
+    ['prev','prev2'].forEach(function(id){ document.getElementById(id).disabled = (i === 0); });
+    ['next','next2'].forEach(function(id){ document.getElementById(id).disabled = (i === pages.length - 1); });
+    document.getElementById('announce').textContent = 'Page ' + (i + 1) + ': ' + pages[i].dataset.title;
+    var items = tocList.querySelectorAll('button.item');
+    items.forEach(function(b, k){ b.setAttribute('aria-current', k === i ? 'true' : 'false'); });
+    try { history.replaceState(null, '', '#p' + (i + 1)); } catch(e){}
+    if (pages[i].querySelector('#defShow')) fillDefShow();
+    if (pages[i].id === 'savePage') updateSaveStatus();
+  }
+  function go(i){
+    i = Math.max(0, Math.min(pages.length - 1, i));
+    if (i === cur || busy) return;
+    var from = pages[cur], to = pages[i], fwd = i > cur;
+    if (reduced || !book.animate){ show(i); to.scrollTop = 0; after(i); return; }
+    busy = true;
+    var turner = document.createElement('div'); turner.className = 'turner';
+    var src = fwd ? from : to;
+    var clone = src.cloneNode(true);
+    copyValues(src, clone);
+    clone.classList.add('current');
+    clone.querySelectorAll('[id]').forEach(function(el){ el.removeAttribute('id'); });
+    clone.setAttribute('aria-hidden', 'true');
+    turner.appendChild(clone);
+    var shade = document.createElement('div'); shade.className = 'shade'; turner.appendChild(shade);
+    book.appendChild(turner);
+    clone.scrollTop = fwd ? from.scrollTop : 0;
+    if (fwd){ show(i); to.scrollTop = 0; }
+    var dur = 650;
+    var kf = fwd ? [{transform:'rotateY(0deg)'},{transform:'rotateY(-100deg)'}] : [{transform:'rotateY(-100deg)'},{transform:'rotateY(0deg)'}];
+    var sk = fwd ? [{opacity:0},{opacity:0.6}] : [{opacity:0.6},{opacity:0}];
+    shade.animate(sk, {duration:dur, fill:'forwards'});
+    var anim = turner.animate(kf, {duration:dur, easing:'cubic-bezier(.45,.05,.35,1)', fill:'forwards'});
+    anim.onfinish = function(){
+      if (!fwd){ show(i); to.scrollTop = 0; }
+      turner.remove(); busy = false; after(i);
+    };
+  }
+  document.getElementById('prev').addEventListener('click', function(){ go(cur - 1); });
+  document.getElementById('next').addEventListener('click', function(){ go(cur + 1); });
+  document.getElementById('prev2').addEventListener('click', function(){ go(cur - 1); });
+  document.getElementById('next2').addEventListener('click', function(){ go(cur + 1); });
+  document.addEventListener('keydown', function(e){
+    if (!toc.hidden){ if (e.key === 'Escape') closeToc(); return; }
+    var t = e.target.tagName;
+    if (t === 'INPUT' || t === 'TEXTAREA' || t === 'SELECT') return;
+    if (e.key === 'ArrowRight' || e.key === 'PageDown'){ e.preventDefault(); go(cur + 1); }
+    else if (e.key === 'ArrowLeft' || e.key === 'PageUp'){ e.preventDefault(); go(cur - 1); }
+  });
+  var tx = null, ty = null;
+  book.addEventListener('touchstart', function(e){
+    if (e.target.closest('input,textarea,select,.fc,.pix')){ tx = null; return; }
+    tx = e.touches[0].clientX; ty = e.touches[0].clientY;
+  }, {passive:true});
+  book.addEventListener('touchend', function(e){
+    if (tx === null) return;
+    var dx = e.changedTouches[0].clientX - tx, dy = e.changedTouches[0].clientY - ty;
+    if (Math.abs(dx) > 60 && Math.abs(dx) > Math.abs(dy) * 1.5){ go(dx < 0 ? cur + 1 : cur - 1); }
+    tx = null;
+  }, {passive:true});
+  document.querySelectorAll('[data-goto]').forEach(function(b){
+    b.addEventListener('click', function(){ go(parseInt(b.dataset.goto, 10)); });
+  });
+
+  /* ---------- cover dots ---------- */
+  (function(){
+    var svg = document.getElementById('dots'), out = '';
+    var gold = {'2,1':1,'9,1':1,'5,2':1,'11,3':1,'1,4':1,'7,5':1,'10,6':1};
+    for (var r = 0; r < 8; r++) for (var c = 0; c < 13; c++){
+      var g = gold[c + ',' + r];
+      out += '<circle cx="' + (14 + c * 27) + '" cy="' + (14 + r * 30) + '" r="' + (g ? 7 : 4) + '" fill="' + (g ? '#F2A900' : 'rgba(255,255,255,.28)') + '"/>';
+    }
+    svg.innerHTML = out;
+  })();
+
+  /* ---------- saved text ---------- */
+  document.querySelectorAll('[data-save]').forEach(function(el){
+    var v = store.get(el.dataset.save); if (v) el.value = v;
+    el.addEventListener('input', function(){ store.set(el.dataset.save, el.value); });
+  });
+  function copyText(text, msgEl){
+    function done(ok){ if (msgEl) msgEl.textContent = ok ? 'Copied.' : 'Select the text and copy it manually.'; }
+    if (navigator.clipboard && navigator.clipboard.writeText){
+      navigator.clipboard.writeText(text).then(function(){ done(true); }, function(){ fallback(); });
+    } else fallback();
+    function fallback(){
+      var t = document.createElement('textarea'); t.value = text; document.body.appendChild(t); t.select();
+      var ok = false; try { ok = document.execCommand('copy'); } catch(e){}
+      t.remove(); done(ok);
+    }
+  }
+  document.querySelector('[data-copy="defFirst"]').addEventListener('click', function(){
+    copyText(document.getElementById('defFirst').value, document.getElementById('copyMsg1'));
+  });
+  function fillDefShow(){
+    var v = document.getElementById('defFirst').value.trim();
+    document.getElementById('defShow').textContent = v || 'You didn\'t write a first answer. Go back to page 2, or write your answer now on the right.';
+  }
+  document.getElementById('copyBoth').addEventListener('click', function(){
+    var a = document.getElementById('defFirst').value.trim(), b = document.getElementById('defNow').value.trim();
+    copyText('My first answer: ' + a + '\n\nMy answer now: ' + b, document.getElementById('copyMsg2'));
+  });
+
+  /* ---------- timer ---------- */
+  (function(){
+    var btn = document.getElementById('timerBtn'), out = document.getElementById('timerOut'), t = null, left = 90;
+    function fmt(s){ return Math.floor(s / 60) + ':' + ('0' + (s % 60)).slice(-2); }
+    btn.addEventListener('click', function(){
+      if (t){ clearInterval(t); t = null; btn.textContent = 'Start 90 seconds'; out.textContent = ''; return; }
+      left = 90; out.textContent = fmt(left); btn.textContent = 'Stop timer';
+      document.getElementById('defFirst').focus();
+      t = setInterval(function(){
+        left--; out.textContent = fmt(left);
+        if (left <= 0){ clearInterval(t); t = null; out.textContent = 'Time. Finish your sentence.'; btn.textContent = 'Start 90 seconds'; }
+      }, 1000);
+    });
+  })();
+
+  /* ---------- checklist ---------- */
+  (function(){
+    var boxes = document.querySelectorAll('#checklist input');
+    boxes.forEach(function(b){ b.addEventListener('change', function(){
+      var n = 0; boxes.forEach(function(x){ if (x.checked) n++; });
+      document.getElementById('checkOut').textContent = 'Your answer passes ' + n + ' of 4.' + (n === 4 ? ' It holds up.' : '');
+    }); });
+  })();
+
+  /* ---------- choice components ---------- */
+  document.querySelectorAll('.choice').forEach(function(ch){
+    var opts = ch.querySelectorAll('.opts button'); if (!opts.length) return;
+    var ans = ch.dataset.answer;
+    opts.forEach(function(b){
+      b.setAttribute('aria-pressed', 'false');
+      b.addEventListener('click', function(){
+        opts.forEach(function(x){ x.classList.remove('picked','right','wrong'); x.setAttribute('aria-pressed','false'); });
+        b.classList.add('picked'); b.setAttribute('aria-pressed','true');
+        var r = ch.querySelector('.reveal'), v = r.querySelector('.verdict');
+        if (ans){
+          var ok = b.dataset.v === ans;
+          b.classList.add(ok ? 'right' : 'wrong');
+          if (!ok) ch.querySelector('[data-v="' + ans + '"]').classList.add('right');
+          if (!v){ v = document.createElement('span'); v.className = 'verdict'; r.insertBefore(v, r.firstChild); }
+          v.textContent = ok ? 'Yes.' : 'Not quite.';
+          v.style.color = ok ? '#2E7D32' : '#B3261E';
+        }
+        r.hidden = false;
+      });
+    });
+  });
+
+  /* ---------- flip cards ---------- */
+  document.querySelectorAll('.fc').forEach(function(c){
+    function flip(){ c.classList.toggle('flipped'); c.setAttribute('aria-pressed', c.classList.contains('flipped') ? 'true' : 'false'); }
+    c.addEventListener('click', flip);
+    c.addEventListener('keydown', function(e){ if (e.key === 'Enter' || e.key === ' '){ e.preventDefault(); flip(); } });
+  });
+
+  /* ---------- stop 2 toggle ---------- */
+  (function(){
+    var tb = document.getElementById('tradBtn'), mb = document.getElementById('mlBtn');
+    function set(ml){
+      document.getElementById('tradDiag').hidden = ml; document.getElementById('mlDiag').hidden = !ml;
+      tb.setAttribute('aria-pressed', ml ? 'false' : 'true'); mb.setAttribute('aria-pressed', ml ? 'true' : 'false');
+    }
+    tb.addEventListener('click', function(){ set(false); });
+    mb.addEventListener('click', function(){ set(true); });
+  })();
+
+  /* ---------- stop 3 next word ---------- */
+  (function(){
+    var words = [['help',0.62],['assist',0.21],['direct',0.07],['serve',0.05],['transfer',0.04],['(other words)',0.01]];
+    var tally = {}, wrap = document.getElementById('nwBars');
+    words.forEach(function(w){
+      var row = document.createElement('div'); row.className = 'barrow';
+      row.innerHTML = '<span>' + w[0] + '</span><div class="track"><div class="bar"></div></div><span>' + w[1].toFixed(2) + '</span>';
+      wrap.appendChild(row);
+      setTimeout(function(){ row.querySelector('.bar').style.width = (w[1] * 100) + '%'; }, 50);
+    });
+    function sample(){
+      var r = Math.random(), acc = 0;
+      for (var k = 0; k < words.length; k++){ acc += words[k][1]; if (r <= acc) return words[k][0]; }
+      return words[0][0];
+    }
+    function render(last){
+      document.getElementById('nwSlot').textContent = last;
+      var parts = Object.keys(tally).sort(function(a,b){ return tally[b] - tally[a]; }).map(function(k){ return k + ' ' + tally[k]; });
+      document.getElementById('nwTally').textContent = parts.join(', ');
+    }
+    document.getElementById('nwOne').addEventListener('click', function(){ var w = sample(); tally[w] = (tally[w] || 0) + 1; render(w); });
+    document.getElementById('nwTwenty').addEventListener('click', function(){ var w; for (var k = 0; k < 20; k++){ w = sample(); tally[w] = (tally[w] || 0) + 1; } render(w); });
+    document.getElementById('nwReset').addEventListener('click', function(){ tally = {}; document.getElementById('nwSlot').textContent = '____'; document.getElementById('nwTally').textContent = ''; });
+  })();
+
+  /* ---------- stop 4 pixels ---------- */
+  (function(){
+    var rows = ['..........','.#######+.','........#.','.......+#.','.......#+.','......+#..','......#+..','.....+#...','.....#+...','..........'];
+    var map = {'.':255,'#':20,'+':140}, grid = document.getElementById('pix');
+    rows.forEach(function(r){ r.split('').forEach(function(ch){
+      var v = map[ch], d = document.createElement('div');
+      d.style.background = 'rgb(' + v + ',' + v + ',' + v + ')';
+      d.textContent = v; d.className = v < 128 ? 'dark' : 'light';
+      grid.appendChild(d);
+    }); });
+    var btn = document.getElementById('pixBtn');
+    btn.addEventListener('click', function(){
+      var on = grid.classList.toggle('nums');
+      btn.textContent = on ? 'Show what you see' : 'Show what the machine sees';
+      btn.setAttribute('aria-pressed', on ? 'true' : 'false');
+    });
+  })();
+
+  /* ---------- stop 5 recommender ---------- */
+  (function(){
+    var shows = ['Space drama','Cooking contest','WWII documentary','Heist thriller','Romantic comedy','Nature series'];
+    var people = {Ana:[1,0,1,1,0,1], Ben:[0,1,0,0,1,0], Cal:[1,1,0,0,1,1]};
+    var tbl = document.getElementById('recTable');
+    Object.keys(people).forEach(function(n){
+      var tr = document.createElement('tr'), h = '<td class="name">' + n + '</td>';
+      people[n].forEach(function(v){ h += v ? '<td class="yes">&#10003;</td>' : '<td class="no">&#10007;</td>'; });
+      tr.innerHTML = h; tbl.appendChild(tr);
+    });
+    var you = [null,null,null], wrap = document.getElementById('recYou');
+    shows.slice(0,3).forEach(function(s, k){
+      var span = document.createElement('span');
+      span.innerHTML = '<b style="color:#003366">' + s + ':</b> ';
+      var seg = document.createElement('span'); seg.className = 'seg';
+      ['Like','Skip'].forEach(function(lbl, j){
+        var b = document.createElement('button'); b.textContent = lbl; b.setAttribute('aria-pressed','false');
+        b.addEventListener('click', function(){
+          you[k] = j === 0 ? 1 : 0;
+          seg.querySelectorAll('button').forEach(function(x){ x.setAttribute('aria-pressed','false'); });
+          b.setAttribute('aria-pressed','true'); compute();
+        });
+        seg.appendChild(b);
+      });
+      span.appendChild(seg); wrap.appendChild(span);
+    });
+    function compute(){
+      var out = document.getElementById('recOut');
+      if (you.indexOf(null) > -1){ out.innerHTML = '<p class="small">Rate all three to see the recommendation.</p>'; return; }
+      var html = '<p style="margin:8px 0 4px"><b>Step 1: how often does each viewer agree with you?</b></p>', best = null, bestN = -1;
+      Object.keys(people).forEach(function(n){
+        var agree = 0; for (var k = 0; k < 3; k++) if (people[n][k] === you[k]) agree++;
+        if (agree > bestN){ bestN = agree; best = n; }
+        html += '<div class="barrow"><span>' + n + '</span><div class="track"><div class="bar" data-w="' + (agree / 3 * 100) + '"></div></div><span>' + agree + ' of 3</span></div>';
+      });
+      var recs = []; for (var k = 3; k < 6; k++) if (people[best][k]) recs.push(shows[k]);
+      html += '<p style="margin:10px 0 0"><b>Step 2: borrow your closest match\'s taste.</b> ' + best + ' agrees with you most, and ' + best + ' liked <b>' + recs.join(' and ') + '</b>. Those go to the top of your row.</p>';
+      html += '<p class="small">Netflix runs this idea across millions of members, with far more signals: what you finish, what you abandon, what time you watch.</p>';
+      out.innerHTML = html;
+      setTimeout(function(){ out.querySelectorAll('.bar').forEach(function(b){ b.style.width = b.dataset.w + '%'; if (b.closest('.barrow').firstChild.textContent === best) b.classList.add('top'); }); }, 30);
+    }
+    compute();
+  })();
+
+  /* ---------- stop 6 sense plan act ---------- */
+  (function(){
+    var steps = [
+      ['Sense','The bump sensor and camera register a chair leg 10 centimeters ahead.'],
+      ['Plan','The map updates. The planner chooses a path that curves around the leg.'],
+      ['Act','The wheel motors turn the vacuum 30 degrees left and drive forward.'],
+      ['Sense','New readings arrive and the loop starts again, many times a second. No step ever finishes the job alone.']
+    ], k = -1, cells = document.querySelectorAll('#spa div');
+    document.getElementById('spaBtn').addEventListener('click', function(){
+      k = (k + 1) % steps.length;
+      var idx = ['Sense','Plan','Act'].indexOf(steps[k][0]);
+      cells.forEach(function(c, j){ c.classList.toggle('on', j === idx); });
+      document.getElementById('spaText').innerHTML = '<b>' + steps[k][0] + '.</b> ' + steps[k][1];
+    });
+  })();
+
+  /* ---------- fill in the blanks ---------- */
+  (function(){
+    var inputs = document.querySelectorAll('#fib .blank');
+    function norm(s){ return s.toLowerCase().replace(/[^a-z ]/g,'').replace(/\s+/g,' ').trim(); }
+    document.getElementById('fibCheck').addEventListener('click', function(){
+      var n = 0;
+      inputs.forEach(function(i){
+        var ok = i.dataset.accept.split('|').indexOf(norm(i.value)) > -1;
+        i.classList.toggle('ok', ok); i.classList.toggle('bad', !ok); if (ok) n++;
+      });
+      document.getElementById('fibOut').textContent = n + ' of 8 correct.' + (n === 8 ? ' Clean sweep.' : '');
+    });
+    document.getElementById('fibShow').addEventListener('click', function(){
+      inputs.forEach(function(i){ i.value = i.dataset.accept.split('|')[0]; i.classList.remove('bad'); i.classList.add('ok'); });
+      document.getElementById('fibOut').textContent = 'Answers shown.';
+    });
+    document.getElementById('fibClear').addEventListener('click', function(){
+      inputs.forEach(function(i){ i.value = ''; i.classList.remove('ok','bad'); });
+      document.getElementById('fibOut').textContent = '';
+    });
+  })();
+
+  /* ---------- application matching ---------- */
+  (function(){
+    var opts = ['Recommender system','Computer vision and robotics','Natural language processing','Deep learning','Robotics plus GenAI','Large language model'];
+    var apps = [
+      ['Netflix','The rows on your home screen','Recommender system'],
+      ['Waymo','Rides with nobody in the driver\'s seat','Computer vision and robotics'],
+      ['Google Translate','A Japanese sign becomes English','Natural language processing'],
+      ['AlphaFold','A protein\'s 3D shape from its recipe','Deep learning'],
+      ['Amazon\'s robot fleet','A million warehouse robots, no collisions','Robotics plus GenAI'],
+      ['Microsoft Copilot','The assistant built into Microsoft 365','Large language model']
+    ];
+    var wrap = document.getElementById('match');
+    apps.forEach(function(a, i){
+      var row = document.createElement('div'); row.className = 'matchrow';
+      var sel = '<select aria-label="AI used by ' + a[0] + '" data-ans="' + a[2] + '"><option value="">Choose one</option>';
+      opts.forEach(function(o){ sel += '<option>' + o + '</option>'; });
+      sel += '</select>';
+      row.innerHTML = '<div><b>' + a[0] + '</b><div class="small">' + a[1] + '</div></div>' + sel + '<span class="mk" aria-hidden="true"></span>';
+      wrap.appendChild(row);
+    });
+    document.getElementById('matchCheck').addEventListener('click', function(){
+      var n = 0;
+      wrap.querySelectorAll('.matchrow').forEach(function(r){
+        var s = r.querySelector('select'), ok = s.value === s.dataset.ans, mk = r.querySelector('.mk');
+        mk.textContent = ok ? '\u2713' : '\u2717'; mk.style.color = ok ? '#2E7D32' : '#B3261E'; if (ok) n++;
+      });
+      document.getElementById('matchOut').textContent = n + ' of 6. Turn the page to see how each one knows.';
+    });
+  })();
+
+
+  /* ---------- helpers shared by saving and printing ---------- */
+  function all(sel){ var out = []; pages.forEach(function(p){ Array.prototype.push.apply(out, p.querySelectorAll(sel)); }); return out; }
+  function normAns(s){ return s.toLowerCase().replace(/[^a-z ]/g,'').replace(/\s+/g,' ').trim(); }
+  function escH(s){ return String(s).replace(/[&<>"]/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]; }); }
+  function choiceEls(){ return all('.choice').filter(function(ch){ return ch.querySelector('.opts button'); }); }
+  store.remove = function(k){ try { window.localStorage.removeItem('u7flip:' + k); } catch(e){} };
+
+  /* ---------- save every answer as it happens ---------- */
+  var restoring = false;
+  function readState(){
+    return {
+      choices: choiceEls().map(function(ch){ var b = ch.querySelector('.opts button.picked'); return b ? b.dataset.v : null; }),
+      checks: all('#checklist input').map(function(i){ return i.checked; }),
+      blanks: all('#fib .blank').map(function(i){ return i.value; }),
+      fibChecked: all('#fib .blank.ok, #fib .blank.bad').length > 0,
+      selects: all('#match select').map(function(s){ return s.value; }),
+      matchChecked: all('#match .mk').some(function(m){ return m.textContent !== ''; }),
+      rec: all('#recYou .seg').map(function(seg){
+        var bs = seg.querySelectorAll('button');
+        for (var k = 0; k < bs.length; k++) if (bs[k].getAttribute('aria-pressed') === 'true') return k;
+        return -1; }),
+      done: true
+    };
+  }
+  function saveState(){ if (!restoring) store.set('state', JSON.stringify(readState())); }
+  ['click','input','change'].forEach(function(ev){
+    document.addEventListener(ev, function(){ setTimeout(saveState, 0); });
+  });
+  function restoreState(){
+    var raw = store.get('state'); if (!raw) return;
+    var s; try { s = JSON.parse(raw); } catch(e){ return; }
+    restoring = true;
+    try {
+      choiceEls().forEach(function(ch, k){
+        var v = s.choices && s.choices[k]; if (!v) return;
+        var b = ch.querySelector('.opts button[data-v="' + v + '"]'); if (b) b.click();
+      });
+      all('#checklist input').forEach(function(i, k){ if (s.checks && s.checks[k]){ i.checked = true; i.dispatchEvent(new Event('change')); } });
+      all('#fib .blank').forEach(function(i, k){ if (s.blanks && s.blanks[k]) i.value = s.blanks[k]; });
+      if (s.fibChecked) document.getElementById('fibCheck').click();
+      all('#match select').forEach(function(sel, k){ if (s.selects && s.selects[k]) sel.value = s.selects[k]; });
+      if (s.matchChecked) document.getElementById('matchCheck').click();
+      all('#recYou .seg').forEach(function(seg, k){
+        var idx = s.rec ? s.rec[k] : -1; if (idx >= 0) seg.querySelectorAll('button')[idx].click();
+      });
+    } finally { restoring = false; }
+  }
+
+  /* ---------- save page ---------- */
+  function openItems(){
+    var open = [];
+    function mark(el){ var pg = el.closest('.page'); var i = pages.indexOf(pg); if (i > -1 && open.indexOf(i) < 0) open.push(i); }
+    choiceEls().forEach(function(ch){ if (!ch.querySelector('.opts button.picked')) mark(ch); });
+    all('#fib .blank').forEach(function(i){ if (!i.value.trim()) mark(i); });
+    all('#match select').forEach(function(sel){ if (!sel.value) mark(sel); });
+    ['defFirst','defNow'].forEach(function(id){ var el = document.getElementById(id); if (!el.value.trim()) mark(el); });
+    if (readState().rec.indexOf(-1) > -1) mark(document.getElementById('recYou'));
+    return open.sort(function(a,b){ return a - b; });
+  }
+  function countItems(){
+    var total = choiceEls().length + all('#fib .blank').length + all('#match select').length + 2 + 1, done = 0;
+    choiceEls().forEach(function(ch){ if (ch.querySelector('.opts button.picked')) done++; });
+    all('#fib .blank').forEach(function(i){ if (i.value.trim()) done++; });
+    all('#match select').forEach(function(sel){ if (sel.value) done++; });
+    ['defFirst','defNow'].forEach(function(id){ if (document.getElementById(id).value.trim()) done++; });
+    if (readState().rec.indexOf(-1) < 0) done++;
+    return {done: done, total: total};
+  }
+  function updateSaveStatus(){
+    var box = document.getElementById('saveStatus'), c = countItems(), open = openItems();
+    box.innerHTML = '<p class="status">You have answered ' + c.done + ' of ' + c.total + ' questions.</p>';
+    if (open.length){
+      var p = document.createElement('p'); p.textContent = 'Still open. Tap a page to go finish it:'; p.style.marginBottom = '4px'; box.appendChild(p);
+      var list = document.createElement('div'); list.className = 'openlist';
+      open.forEach(function(i){
+        var b = document.createElement('button'); b.textContent = (i + 1) + '. ' + pages[i].dataset.title;
+        b.addEventListener('click', function(){ go(i); }); list.appendChild(b);
+      });
+      box.appendChild(list);
+    } else {
+      var d = document.createElement('p'); d.textContent = 'Everything is answered. Print or save it now.'; box.appendChild(d);
+    }
+    if (!document.getElementById('studentName').value.trim()){
+      var n = document.createElement('p'); n.className = 'small'; n.textContent = 'Add your name so your printout is labeled.'; box.appendChild(n);
+    }
+  }
+  var pBtn = document.getElementById('printBtn'), pMenu = document.getElementById('printMenu'), pWrap = document.getElementById('printWrap');
+  var nameTop = document.getElementById('nameTop'), nameMain = document.getElementById('studentName');
+  function setMenu(open){ pMenu.hidden = !open; pBtn.setAttribute('aria-expanded', open ? 'true' : 'false'); if (open) nameTop.focus(); }
+  pBtn.addEventListener('click', function(e){ e.stopPropagation(); nameTop.value = nameMain.value; setMenu(pMenu.hidden); });
+  document.addEventListener('click', function(e){ if (!pMenu.hidden && !pWrap.contains(e.target)) setMenu(false); });
+  document.addEventListener('keydown', function(e){ if (e.key === 'Escape' && !pMenu.hidden){ setMenu(false); pBtn.focus(); } });
+  nameTop.addEventListener('input', function(){ nameMain.value = nameTop.value; store.set('name', nameTop.value); });
+  nameMain.addEventListener('input', function(){ nameTop.value = nameMain.value; });
+  document.getElementById('pmShort').addEventListener('click', function(){ setMenu(false); preparePrint('summary'); window.print(); });
+  document.getElementById('pmFull').addEventListener('click', function(){ setMenu(false); preparePrint('full'); window.print(); });
+  document.getElementById('pmStatus').addEventListener('click', function(){ setMenu(false); go(pages.indexOf(document.getElementById('savePage'))); });
+  document.getElementById('clearAll').addEventListener('click', function(){
+    if (!window.confirm('Clear every answer in this book on this browser? This cannot be undone.')) return;
+    ['state','defFirst','defNow','name'].forEach(function(k){ store.remove(k); });
+    try { history.replaceState(null, '', location.pathname); } catch(e){}
+    location.reload();
+  });
+
+  /* ---------- printing ---------- */
+  function mirrorTextareas(){
+    all('textarea').forEach(function(ta){
+      var d = ta.nextElementSibling;
+      if (!d || !d.classList.contains('print-text')){ d = document.createElement('div'); d.className = 'print-text'; ta.parentNode.insertBefore(d, ta.nextSibling); }
+      d.textContent = ta.value.trim() || '(No answer written)';
+    });
+  }
+  function collect(){
+    var groups = [];
+    pages.forEach(function(p){
+      if (p.id === 'savePage') return;
+      var rows = [];
+      p.querySelectorAll('.choice').forEach(function(ch){
+        if (!ch.querySelector('.opts button')) return;
+        var q = ch.querySelector('.q').innerText.replace(/\s*\n\s*/g, ', ');
+        var picked = ch.querySelector('.opts button.picked'), ans = ch.dataset.answer, ok = null, key = '';
+        if (ans){ var kb = ch.querySelector('[data-v="' + ans + '"]'); key = kb ? kb.textContent : ''; if (picked) ok = picked.dataset.v === ans; }
+        rows.push({q:q, a: picked ? picked.textContent : '', ok:ok, key:key, poll: !ans});
+      });
+      p.querySelectorAll('#fib .blank').forEach(function(inp){
+        var para = inp.closest('p').cloneNode(true); para.querySelector('input').replaceWith('____');
+        var acc = inp.dataset.accept.split('|'), v = inp.value.trim();
+        rows.push({q: para.textContent.trim(), a: v, ok: v ? acc.indexOf(normAns(v)) > -1 : null, key: acc[0]});
+      });
+      p.querySelectorAll('#match select').forEach(function(sel){
+        rows.push({q: sel.closest('.matchrow').querySelector('b').textContent, a: sel.value, ok: sel.value ? sel.value === sel.dataset.ans : null, key: sel.dataset.ans});
+      });
+      if (p.querySelector('#recYou')){
+        var names = ['Space drama','Cooking contest','WWII documentary'], r = readState().rec;
+        var rated = r.map(function(v, k){ return v < 0 ? null : names[k] + ': ' + (v === 0 ? 'Like' : 'Skip'); }).filter(Boolean);
+        rows.push({q:'Your ratings', a: rated.join('; '), ok:null, key:''});
+        var recP = document.querySelectorAll('#recOut p')[1];
+        if (recP && r.indexOf(-1) < 0) rows.push({q:'Recommendation', a: recP.textContent.replace(/^Step 2: borrow your closest match's taste\.\s*/, ''), ok:null, key:''});
+      }
+      if (rows.length) groups.push({title: p.dataset.title, n: pages.indexOf(p) + 1, rows: rows});
+    });
+    return groups;
+  }
+  function buildSummary(){
+    var name = document.getElementById('studentName').value.trim() || '(No name entered)';
+    var date = new Date().toLocaleDateString(undefined, {year:'numeric', month:'long', day:'numeric'});
+    var groups = collect(), keyed = 0, right = 0, answered = 0, total = 0;
+    groups.forEach(function(g){ g.rows.forEach(function(r){ total++; if (r.a) answered++; if (r.key){ if (r.a) keyed++; if (r.ok) right++; } }); });
+    var checks = all('#checklist input'), tests = ['Says where the knowledge comes from','Separates AI from ordinary software','Avoids saying the machine thinks like a person','Covers more than chatbots'], passed = 0;
+    checks.forEach(function(c){ if (c.checked) passed++; });
+    var h = '<h1>My answers: Hiding in Plain Sight</h1>';
+    h += '<p class="meta">ARIN 310, Unit 7: Applications of AI</p>';
+    h += '<p class="meta"><b>Name:</b> ' + escH(name) + '&nbsp;&nbsp;&nbsp;<b>Printed:</b> ' + escH(date) + '</p>';
+    var cnt = countItems();
+    h += '<p class="meta"><b>Answered:</b> ' + cnt.done + ' of ' + cnt.total + ' questions.&nbsp;&nbsp;&nbsp;<b>Correct on questions with an answer key:</b> ' + right + ' of ' + keyed + ' answered.</p>';
+    h += '<h2>What is AI? My first answer</h2><div class="sumbox">' + escH(document.getElementById('defFirst').value.trim() || '(No answer written)') + '</div>';
+    h += '<h2>Definition check: my first answer passes ' + passed + ' of 4</h2><ul>';
+    checks.forEach(function(c, k){ h += '<li>' + tests[k] + ': ' + (c.checked ? 'yes' : 'not yet') + '</li>'; });
+    h += '</ul>';
+    h += '<h2>What is AI? My answer now</h2><div class="sumbox">' + escH(document.getElementById('defNow').value.trim() || '(No answer written)') + '</div>';
+    h += '<h2>My choices, page by page</h2>';
+    groups.forEach(function(g){
+      h += '<h3>Page ' + g.n + ': ' + escH(g.title) + '</h3><table class="sum"><tr><th style="width:46%">Question</th><th style="width:34%">My answer</th><th>Result</th></tr>';
+      g.rows.forEach(function(r){
+        var res = '';
+        if (!r.a) res = 'Not answered';
+        else if (r.ok === true) res = '<span class="r-ok">&#10003; Correct</span>';
+        else if (r.ok === false) res = '<span class="r-bad">&#10007;</span> Key: ' + escH(r.key);
+        else if (r.poll) res = 'Your call';
+        if (r.note) res = escH(r.note);
+        h += '<tr><td>' + escH(r.q) + '</td><td>' + (r.a ? escH(r.a) : '') + '</td><td>' + res + '</td></tr>';
+      });
+      h += '</table>';
+    });
+    document.getElementById('printSummary').innerHTML = h;
+  }
+  function preparePrint(mode){
+    if (mode) document.body.setAttribute('data-print', mode);
+    mirrorTextareas(); buildSummary();
+  }
+  window.u7PreparePrint = preparePrint;
+  window.addEventListener('beforeprint', function(){ preparePrint(document.body.getAttribute('data-print')); });
+  window.addEventListener('afterprint', function(){ document.body.removeAttribute('data-print'); });
+  document.getElementById('printShort').addEventListener('click', function(){ preparePrint('summary'); window.print(); });
+  document.getElementById('printFull').addEventListener('click', function(){ preparePrint('full'); window.print(); });
+
+  restoreState();
+
+  /* ---------- start ---------- */
+  var start = 0, m = (location.hash || '').match(/^#p(\d+)$/);
+  if (m){ start = Math.max(0, Math.min(pages.length - 1, parseInt(m[1], 10) - 1)); }
+  show(start); after(start);
+})();
+</script>
+</body>
+</html>
