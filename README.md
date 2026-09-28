@@ -16,11 +16,11 @@ These two flipbooks take you behind the screen: what AI really is, how it learns
 
 ## Start reading
 
-### 📘 [Hiding in Plain Sight](https://cynthialmcginnis.github.io/unit7-flipbooks/Unit7_Hiding_in_Plain_Sight.html)
+### 📘 [Hiding in Plain Sight](https://cynthialmcginnis.github.io/Unit7_Hiding_in_Plain_Sight/Unit7_Hiding_in_Plain_Sight.html)
 
 Write your own answer to "What is AI?", then put it to the test. Walk through all eight course units, and meet seven real applications and the AI inside each one.
 
-### 🏦 [Bank of America's Internal AI Strategy](https://cynthialmcginnis.github.io/unit7-flipbooks/bank-of-america.html)
+### 🏦 [Bank of America's Internal AI Strategy](https://cynthialmcginnis.github.io/Unit7_Hiding_in_Plain_Sight/bank-of-america.html)
 
 Follow how a bank built Erica, why its customer assistant isn't a ChatGPT-style chatbot, and what responsible AI looks like inside a large organization. You can also open it from the Erica page in *Hiding in Plain Sight*.
 
